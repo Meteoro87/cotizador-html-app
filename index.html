@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotizador Gráfico Avanzado</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluye html2pdf.js para la exportación a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -25,240 +27,312 @@
         input[type="number"] {
             -moz-appearance: textfield;
         }
+        /* Estilos para que el área de la propuesta se vea mejor en PDF */
+        .proposal-printable-area {
+            background-color: #ffffff;
+            padding: 20mm; /* Simula márgenes de página A4 */
+            box-shadow: none; /* Elimina sombras para impresión */
+            border: none; /* Elimina bordes para impresión */
+        }
+        /* Clase para ocultar elementos durante la generación del PDF */
+        .hide-for-pdf {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4 sm:p-8">
 
     <div class="container-main max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10 transition-all duration-300">
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-indigo-700 mb-6 sm:mb-8 tracking-tight">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-red-700 mb-6 sm:mb-8 tracking-tight">
             Cotizador de Etiquetas
         </h1>
-        <p class="text-center text-gray-500 mb-8 sm:mb-10 text-lg">
-            Completa los detalles para generar una cotización. Los datos se guardarán automáticamente en Firestore.
+        <p class="text-center text-gray-600 mb-8 sm:mb-10 text-lg">
+            Completa los detalles para generar y guardar tus cotizaciones.
         </p>
+        
 
-        <!-- Formulario principal de cotización -->
-        <form id="cotizadorForm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <!-- Columna izquierda -->
-                <div class="space-y-6">
-                    <!-- Información del trabajo -->
-                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Información del Trabajo</h2>
-                        <div class="space-y-4">
-                            <label class="block">
-                                <span class="text-gray-700">Cliente</span>
-                                <input id="cliente" type="text" placeholder="Nombre del Cliente" value="MESTIZO S.R.L." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Vendedor</span>
-                                <input id="vendedor" type="text" placeholder="Nombre del Vendedor" value="Javier Avalos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Cotización Dolar (U$S)</span>
-                                <input id="cotizacionDolar" type="number" step="0.01" value="1305" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Columna derecha -->
-                <div class="space-y-6">
-                     <!-- Detalles de la Etiqueta -->
-                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Detalles de la Etiqueta</h2>
-                        <div class="space-y-4">
-                            <label class="block">
-                                <span class="text-gray-700">Cantidad (Etiquetas)</span>
-                                <select id="cantidad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <option value="8000">8,000</option>
-                                    <option value="15000">15,000</option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Ancho Etiqueta (mm)</span>
-                                <input id="anchoEtiqueta" type="number" value="212" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Avance Etiqueta (mm)</span>
-                                <input id="avanceEtiqueta" type="number" value="50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Tipo de Impresión</span>
-                                <select id="tipoImpresion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <option value="CMYK">CMYK</option>
-                                    <option value="STANDARD WHITE">Standard White</option>
-                                    <option value="W PREMIUM">W Premium</option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-700">Sustrato</span>
-                                <select id="sustrato" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <option value="OPP Blanco">OPP Blanco</option>
-                                    <option value="OPP Metalizado">OPP Metalizado</option>
-                                    <option value="Papel Ilustración">Papel Ilustración</option>
-                                    <option value="Papel Ilustración Frío/Húmedo">Papel Ilustración Frío/Húmedo</option>
-                                    <option value="OPP Transparente">OPP Transparente</option>
-                                </select>
-                            </label>
-                        </div>
-                    </div>
+        <!-- Sección de Autenticación -->
+        <div id="authSection" class="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-200 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">Bienvenido</h2>
+            <div id="loginForm" class="space-y-4">
+                <label class="block">
+                    <span class="text-gray-700">Email</span>
+                    <input id="authEmail" type="email" placeholder="tu@email.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">Contraseña</span>
+                    <input id="authPassword" type="password" placeholder="Contraseña" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                </label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="loginBtn" class="w-full sm:w-1/2 px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-lg hover:bg-red-700 transition-colors duration-200">
+                        Iniciar Sesión
+                    </button>
+                    <button id="registerBtn" class="w-full sm:w-1/2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200">
+                        Registrarse
+                    </button>
                 </div>
             </div>
-
-            <!-- Sección de Acabados y Otros Costos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <!-- Acabados -->
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Acabados</h2>
-                    <div class="space-y-4">
-                        <label class="block">
-                            <span class="text-gray-700">Tipo de Barniz</span>
-                            <select id="barniz" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                <option value="Sin barniz">Sin barniz</option>
-                                <option value="Barniz al agua">Barniz al agua</option>
-                                <option value="Barniz UV Mate">Barniz UV Mate</option>
-                                <option value="Barniz UV Brillante">Barniz UV Brillante</option>
-                                <option value="Barniz Reimprimible">Barniz Reimprimible</option>
-                            </select>
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">Tipo de Laminado</span>
-                            <select id="laminado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                <option value="Laminado Brillante Frío">Laminado Brillante Frío</option>
-                                <option value="Sin laminado">Sin laminado</option>
-                                <option value="Laminado Brillante UV">Laminado Brillante UV</option>
-                                <option value="Laminado Mate Frío">Laminado Mate Frío</option>
-                                <option value="Laminado Mate UV">Laminado Mate UV</option>
-                            </select>
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">Superficie de Stamping (%)</span>
-                            <input id="superficieStamping" type="number" step="0.1" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">Costo de Primer ($/m2)</span>
-                            <input id="costoPrimer" type="number" step="0.01" value="0.03892317" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Otros Costos y Descuentos -->
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Otros Costos y Porcentajes</h2>
-                    <div class="space-y-4">
-                        <label class="block">
-                            <span class="text-gray-700">Gasto de Pre-prensa (U$S)</span>
-                            <input id="gastosPrePrensa" type="number" step="0.01" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">Cajas</span>
-                            <input id="cantidadCajas" type="number" value="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">Destino de Envío</span>
-                            <select id="destinoEnvio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                <option value="Rosario">Rosario</option>
-                                <option value="Rafaela">Rafaela</option>
-                                <option value="Santa Fe">Santa Fe</option>
-                                <option value="Bs As">Bs As</option>
-                                <option value="No aplica">No aplica</option>
-                            </select>
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">% de Utilidad</span>
-                            <input id="porcentajeUtilidad" type="number" step="0.1" value="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">% de Comisión</span>
-                            <input id="porcentajeComision" type="number" step="0.1" value="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                        <label class="block">
-                            <span class="text-gray-700">% de IIBB</span>
-                            <input id="porcentajeIIBB" type="number" step="0.1" value="1.3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <!-- Área de resultados y botones -->
-        <div id="results" class="bg-indigo-50 p-6 rounded-lg shadow-inner border border-indigo-200 mt-6">
-            <h2 class="text-xl font-semibold text-indigo-800 mb-4">Resumen de Cotización</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-indigo-700">
-                <p class="font-medium">Número de Cotización: <span id="cotizacionId" class="font-bold text-indigo-900">0</span></p>
-                <p class="font-medium">Costo de Producción (U$S): <span id="costoProduccionUSD" class="font-bold text-indigo-900">0.00</span></p>
-                <p class="font-medium">Costo Total ($): <span id="costoTotalARS" class="font-bold text-indigo-900">0.00</span></p>
-                <p class="font-medium">Total a Vender ($): <span id="totalVenta" class="font-bold text-indigo-900">0.00</span></p>
-                <p class="font-medium">Costo por Millar ($): <span id="costoPorMillar" class="font-bold text-indigo-900">0.00</span></p>
-                <p class="font-medium">ID de Usuario: <span id="userIdDisplay" class="font-mono text-xs text-indigo-600">Cargando...</span></p>
-            </div>
-            <div class="mt-6 flex flex-col sm:flex-row gap-4">
-                <button id="saveButton" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition-colors duration-200">
-                    Guardar Cotización
+            <div id="loggedInUserInfo" class="hidden text-center mt-4">
+                <p class="text-lg font-semibold text-gray-800">Has iniciado sesión como: <span id="userEmailDisplay"></span> (<span id="userRoleDisplay"></span>)</p>
+                <button id="logoutBtn" class="mt-4 px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-lg hover:bg-red-700 transition-colors duration-200">
+                    Cerrar Sesión
                 </button>
             </div>
         </div>
-        
-        <!-- Sección de Propuesta de Cotización (simula el PDF) -->
-        <div id="proposal" class="mt-10 bg-white p-6 rounded-lg shadow-lg border border-gray-200 hidden">
-            <h2 class="text-2xl font-bold text-gray-700 mb-4">Propuesta Comercial</h2>
-            <table class="w-full text-left table-auto">
-                <thead>
-                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                        <th class="py-3 px-6 text-left">DESCRIPCIÓN</th>
-                        <th class="py-3 px-6 text-left">MEDIDAS</th>
-                        <th class="py-3 px-6 text-left">MATERIAL</th>
-                        <th class="py-3 px-6 text-left">ACABADOS</th>
-                        <th class="py-3 px-6 text-center">CANTIDAD</th>
-                        <th class="py-3 px-6 text-center">PRECIO UNITARIO</th>
-                        <th class="py-3 px-6 text-center">TOTAL</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 text-sm font-light">
-                    <tr class="border-b border-gray-200 hover:bg-gray-100">
-                        <td class="py-3 px-6 text-left whitespace-nowrap">
-                            <span class="font-medium">Etiq Hummus</span>
-                        </td>
-                        <td class="py-3 px-6 text-left">
-                            <span id="proposalMedidas"></span>
-                        </td>
-                        <td class="py-3 px-6 text-left">
-                            <span id="proposalMaterial"></span>
-                        </td>
-                        <td class="py-3 px-6 text-left">
-                            <span id="proposalAcabados"></span>
-                        </td>
-                        <td class="py-3 px-6 text-center">
-                            <span id="proposalCantidad"></span>
-                        </td>
-                        <td class="py-3 px-6 text-center">
-                            <span id="proposalPrecioUnitario"></span>
-                        </td>
-                        <td class="py-3 px-6 text-center">
-                            <span id="proposalTotal"></span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="mt-6 text-gray-600">
-                <p class="font-bold">Gastos de preprensa: USD <span id="proposalPreprensa">0.00</span></p>
-                <p class="font-bold mt-2">Estos precios no incluyen IVA.</p>
-                <p class="font-bold mt-2">Dólar BNA Tipo Vendedor, al cierre del día anterior a la facturación.</p>
-            </div>
-        </div>
 
-        <!-- Área de cotizaciones guardadas -->
-        <div class="mt-10">
-            <h2 class="text-2xl font-bold text-gray-700 mb-4">Cotizaciones Guardadas</h2>
-            <div id="savedQuotesList" class="space-y-4">
-                <p class="text-gray-400 text-center" id="loadingQuotesMessage">Cargando cotizaciones...</p>
-                <!-- Las cotizaciones se insertarán aquí por JavaScript -->
+        <!-- Contenido principal (oculto hasta el login) -->
+        <div id="mainContent" class="hidden">
+            <!-- Formulario principal de cotización -->
+            <form id="cotizadorForm" class="no-print">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Columna izquierda -->
+                    <div class="space-y-6">
+                        <!-- Información del trabajo -->
+                        <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                            <h2 class="text-xl font-semibold text-red-700 mb-4">Información del Trabajo</h2>
+                            <div class="space-y-4">
+                                <label class="block">
+                                    <span class="text-gray-700">Cliente</span>
+                                    <input id="cliente" type="text" placeholder="Nombre del Cliente" value="MESTIZO S.R.L." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                </label>
+                                <label class="block">
+                                    <span class="text-gray-700">Vendedor</span>
+                                    <input id="vendedor" type="text" placeholder="Nombre del Vendedor" value="Javier Avalos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                </label>
+                                <label class="block">
+                                    <span class="text-gray-700">Cotización Dolar (U$S)</span>
+                                    <input id="cotizacionDolar" type="number" step="0.01" value="1305" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha -->
+                    <div class="space-y-6">
+                        <!-- Detalles de la Etiqueta -->
+                        <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                            <h2 class="text-xl font-semibold text-red-700 mb-4">Detalles de la Etiqueta</h2>
+                            <div class="space-y-4">
+                                <label class="block">
+                                    <span class="text-gray-700">Cantidad (Etiquetas)</span>
+                                    <select id="cantidad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <option value="8000">8,000</option>
+                                        <option value="15000">15,000</option>
+                                    </select>
+                                </label>
+                                <label class="block">
+                                    <span class="text-gray-700">Ancho Etiqueta (mm)</span>
+                                    <input id="anchoEtiqueta" type="number" value="212" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                </label>
+                                <label class="block">
+                                    <span class="text-gray-700">Avance Etiqueta (mm)</span>
+                                    <input id="avanceEtiqueta" type="number" value="50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                </label>
+                                <!-- Nuevos campos para Tipo de Impresión -->
+                                <label class="block">
+                                    <span class="text-gray-700">Colores de Impresión</span>
+                                    <select id="coloresImpresion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <option value="CMY">CMY</option>
+                                        <option value="CMYK">CMYK</option>
+                                        <option value="CMYKOV">CMYKOV</option>
+                                        <option value="CMYKOVG">CMYKOVG</option>
+                                    </select>
+                                </label>
+                                <label class="block">
+                                    <span class="text-gray-700">Tintas Blancas</span>
+                                    <select id="tintasBlancas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <option value="Sin Blanco">Sin Blanco</option>
+                                        <option value="STANDARD WHITE">STANDARD WHITE</option>
+                                        <option value="W PREMIUM">W PREMIUM</option>
+                                    </select>
+                                </label>
+                                <!-- Fin de nuevos campos -->
+                                <label class="block">
+                                    <span class="text-gray-700">Sustrato</span>
+                                    <select id="sustrato" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                        <option value="OPP Blanco">OPP Blanco</option>
+                                        <option value="OPP Metalizado">OPP Metalizado</option>
+                                        <option value="Papel Ilustración">Papel Ilustración</option>
+                                        <option value="Papel Ilustración Frío/Húmedo">Papel Ilustración Frío/Húmedo</option>
+                                        <option value="OPP Transparente">OPP Transparente</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Acabados y Otros Costos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Acabados -->
+                    <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                        <h2 class="text-xl font-semibold text-red-700 mb-4">Acabados</h2>
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-gray-700">Tipo de Barniz</span>
+                                <select id="barniz" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                    <option value="Sin barniz">Sin barniz</option>
+                                    <option value="Barniz al agua">Barniz al agua</option>
+                                    <option value="Barniz UV Mate">Barniz UV Mate</option>
+                                    <option value="Barniz UV Brillante">Barniz UV Brillante</option>
+                                    <option value="Barniz Reimprimible">Barniz Reimprimible</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Tipo de Laminado</span>
+                                <select id="laminado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                    <option value="Laminado Brillante Frío">Laminado Brillante Frío</option>
+                                    <option value="Sin laminado">Sin laminado</option>
+                                    <option value="Laminado Brillante UV">Laminado Brillante UV</option>
+                                    <option value="Laminado Mate Frío">Laminado Mate Frío</option>
+                                    <option value="Laminado Mate UV">Laminado Mate UV</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Superficie de Stamping (%)</span>
+                                <input id="superficieStamping" type="number" step="0.1" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Costo de Primer ($/m2)</span>
+                                <input id="costoPrimer" type="number" step="0.01" value="0.03892317" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Otros Costos y Descuentos -->
+                    <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                        <h2 class="text-xl font-semibold text-red-700 mb-4">Otros Costos y Porcentajes</h2>
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-gray-700">Gasto de Pre-prensa (U$S)</span>
+                                <input id="gastosPrePrensa" type="number" step="0.01" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Cajas</span>
+                                <input id="cantidadCajas" type="number" value="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Destino de Envío</span>
+                                <select id="destinoEnvio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                                    <option value="Rosario">Rosario</option>
+                                    <option value="Rafaela">Rafaela</option>
+                                    <option value="Santa Fe">Santa Fe</option>
+                                    <option value="Bs As">Bs As</option>
+                                    <option value="No aplica">No aplica</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">% de Utilidad</span>
+                                <input id="porcentajeUtilidad" type="number" step="0.1" value="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">% de Comisión</span>
+                                <input id="porcentajeComision" type="number" step="0.1" value="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">% de IIBB</span>
+                                <input id="porcentajeIIBB" type="number" step="0.1" value="1.3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Área de resultados y botones -->
+            <div id="results" class="bg-red-100 p-6 rounded-lg shadow-inner border border-red-200 mt-6 no-print">
+                <h2 class="text-xl font-semibold text-red-800 mb-4">Resumen de Cotización</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-red-700">
+                    <p class="font-medium">Número de Cotización: <span id="cotizacionId" class="font-bold text-red-900">0</span></p>
+                    <p class="font-medium">Costo de Producción (U$S): <span id="costoProduccionUSD" class="font-bold text-red-900">0.00</span></p>
+                    <p class="font-medium">Costo Total ($): <span id="costoTotalARS" class="font-bold text-red-900">0.00</span></p>
+                    <p class="font-medium">Total a Vender ($): <span id="totalVenta" class="font-bold text-red-900">0.00</span></p>
+                    <p class="font-medium">Costo por Millar ($): <span id="costoPorMillar" class="font-bold text-red-900">0.00</span></p>
+                    <p class="font-medium">ID de Usuario: <span id="userIdDisplay" class="font-mono text-xs text-red-600">Cargando...</span></p>
+                </div>
+                <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                    <button id="saveButton" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-lg hover:bg-red-700 transition-colors duration-200">
+                        Guardar Cotización
+                    </button>
+                    <button id="exportPdfButton" class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-lg hover:bg-green-700 transition-colors duration-200">
+                        Exportar a PDF
+                    </button>
+                </div>
             </div>
-        </div>
+            
+            <!-- Sección de Propuesta de Cotización (simula el PDF) -->
+            <div id="proposal" class="mt-10 bg-white p-6 rounded-lg shadow-lg border border-gray-200 proposal-printable-area">
+                <div class="flex justify-center mb-6">
+                    <img src="https://placehold.co/200x50/E64A19/ffffff?text=CHIOZZI" alt="Logo Chiozzi" class="h-12">
+                </div>
+                <h2 class="text-2xl font-bold text-gray-700 mb-4 text-center">Propuesta Comercial</h2>
+                <div class="mb-6 border-b border-gray-300 pb-4 text-gray-700">
+                    <p class="font-semibold">Cliente: <span id="proposalCliente"></span></p>
+                    <p class="font-semibold">Vendedor: <span id="proposalVendedor"></span></p>
+                    <p class="font-semibold">Fecha: <span id="proposalFecha"></span></p>
+                    <p class="font-semibold">Cotización #: <span id="proposalCotizacionId"></span></p>
+                </div>
+                <table class="w-full text-left table-auto border-collapse mb-6">
+                    <thead>
+                        <tr class="bg-red-100 text-red-700 uppercase text-sm leading-normal border-b border-red-300">
+                            <th class="py-3 px-6 text-left">DESCRIPCIÓN</th>
+                            <th class="py-3 px-6 text-left">MEDIDAS</th>
+                            <th class="py-3 px-6 text-left">MATERIAL</th>
+                            <th class="py-3 px-6 text-left">ACABADOS</th>
+                            <th class="py-3 px-6 text-center">CANTIDAD</th>
+                            <th class="py-3 px-6 text-right">PRECIO UNITARIO (USD)</th>
+                            <th class="py-3 px-6 text-right">TOTAL (USD)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm font-light">
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-3 px-6 text-left whitespace-nowrap">
+                                <span class="font-medium">Etiquetas Impresas</span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span id="proposalMedidas_table"></span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span id="proposalMaterial_table"></span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span id="proposalAcabados_table"></span>
+                            </td>
+                            <td class="py-3 px-6 text-center">
+                                <span id="proposalCantidad_table"></span>
+                            </td>
+                            <td class="py-3 px-6 text-right">
+                                <span id="proposalPrecioUnitario_table"></span>
+                            </td>
+                            <td class="py-3 px-6 text-right">
+                                <span id="proposalTotal_table"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mt-6 text-gray-700 text-right">
+                    <p class="font-bold text-lg">Subtotal (USD): <span id="proposalSubtotal">0.00</span></p>
+                    <p class="font-bold">Gastos de preprensa (USD): <span id="proposalPreprensa_summary">0.00</span></p>
+                    <p class="font-bold text-xl mt-4">Total a Vender (ARS): <span id="proposalTotalARS">0.00</span></p>
+                </div>
+                <div class="mt-6 text-gray-600 border-t border-gray-300 pt-4">
+                    <p class="font-bold">Estos precios no incluyen IVA.</p>
+                    <p class="font-bold mt-2">Dólar BNA Tipo Vendedor, al cierre del día anterior a la facturación.</p>
+                    <p class="font-bold mt-2">Validez de la cotización: 15 días.</p>
+                </div>
+            </div>
+
+            <!-- Área de cotizaciones guardadas -->
+            <div id="savedQuotesSection" class="mt-10 no-print">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Cotizaciones Guardadas</h2>
+                <div id="savedQuotesList" class="space-y-4">
+                    <p class="text-gray-400 text-center" id="loadingQuotesMessage">Cargando cotizaciones...</p>
+                    <!-- Las cotizaciones se insertarán aquí por JavaScript -->
+                </div>
+            </div>
+        </div> <!-- Fin de mainContent -->
 
         <!-- Mensajes del sistema -->
-        <div id="systemMessage" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-0">
+        <div id="systemMessage" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-0 no-print">
             Mensaje del sistema
         </div>
     </div>
@@ -266,8 +340,27 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword, // Para registrar nuevos usuarios
+            signInWithEmailAndPassword,     // Para iniciar sesión
+            signOut                         // Para cerrar sesión
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc, 
+            onSnapshot, 
+            runTransaction, 
+            updateDoc, 
+            deleteDoc,
+            getDoc, // Para obtener documentos de usuario
+            setDoc // Para crear documentos de usuario
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -278,7 +371,12 @@
         let app;
         let db;
         let auth;
-        let userId;
+        let userId = null;
+        let userEmail = null;
+        let userRole = null;
+        let userCommission = 0; // Comisión fija del usuario
+        let currentEditingQuoteId = null; // Variable para almacenar el ID de la cotización que se está editando
+        let initialFormCommission = 5; // Comisión por defecto si no hay usuario o no se encuentra
 
         // Base de datos de valores del Excel (hardcoded de los CSVs)
         const costosFijos = {
@@ -324,18 +422,18 @@
             }
         };
 
+        // Nuevos costos de impresión para colores y tintas blancas (costo por metro lineal)
         const costosImpresion = {
-            "CMYK": {
-                ppi_c1: 1.353911753394383,
-                ppi_c4: 5.4156470135775319
+            colores: {
+                "CMY": 0.040, 
+                "CMYK": 0.054156470135775319, 
+                "CMYKOV": 0.070, 
+                "CMYKOVG": 0.085 
             },
-            "STANDARD WHITE": {
-                ppi_c1: 1.060415759120962,
-                ppi_c4: 4.2416630364838479
-            },
-            "W PREMIUM": {
-                ppi_c1: 1.600222231288305,
-                ppi_c4: 6.40088892515322
+            tintasBlancas: {
+                "Sin Blanco": 0,
+                "STANDARD WHITE": 0.042416630364838479, 
+                "W PREMIUM": 0.0640088892515322 
             }
         };
 
@@ -345,8 +443,21 @@
         };
 
         // --- Referencias a los elementos del DOM ---
-        const form = document.getElementById('cotizadorForm');
+        const authSection = document.getElementById('authSection');
+        const loginForm = document.getElementById('loginForm');
+        const loggedInUserInfo = document.getElementById('loggedInUserInfo');
+        const authEmailInput = document.getElementById('authEmail');
+        const authPasswordInput = document.getElementById('authPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const mainContent = document.getElementById('mainContent');
+
+        const cotizadorForm = document.getElementById('cotizadorForm');
         const saveButton = document.getElementById('saveButton');
+        const exportPdfButton = document.getElementById('exportPdfButton'); // Nuevo botón
         const cotizacionIdDisplay = document.getElementById('cotizacionId');
         const costoProduccionUSDDisplay = document.getElementById('costoProduccionUSD');
         const costoTotalARSDisplay = document.getElementById('costoTotalARS');
@@ -357,13 +468,39 @@
         const loadingQuotesMessage = document.getElementById('loadingQuotesMessage');
         const systemMessage = document.getElementById('systemMessage');
         const proposalDiv = document.getElementById('proposal');
-        const proposalMedidas = document.getElementById('proposalMedidas');
-        const proposalMaterial = document.getElementById('proposalMaterial');
-        const proposalAcabados = document.getElementById('proposalAcabados');
-        const proposalCantidad = document.getElementById('proposalCantidad');
-        const proposalPrecioUnitario = document.getElementById('proposalPrecioUnitario');
-        const proposalTotal = document.getElementById('proposalTotal');
-        const proposalPreprensa = document.getElementById('proposalPreprensa');
+
+        // Referencias para la sección de propuesta
+        const proposalCliente = document.getElementById('proposalCliente');
+        const proposalVendedor = document.getElementById('proposalVendedor');
+        const proposalFecha = document.getElementById('proposalFecha');
+        const proposalCotizacionId = document.getElementById('proposalCotizacionId');
+        
+        // Referencias para la tabla de propuesta (¡IDs únicos!)
+        const proposalMedidas_table = document.getElementById('proposalMedidas_table');
+        const proposalMaterial_table = document.getElementById('proposalMaterial_table');
+        const proposalAcabados_table = document.getElementById('proposalAcabados_table');
+        const proposalCantidad_table = document.getElementById('proposalCantidad_table');
+        const proposalPrecioUnitario_table = document.getElementById('proposalPrecioUnitario_table');
+        const proposalTotal_table = document.getElementById('proposalTotal_table');
+        const proposalPreprensa_summary = document.getElementById('proposalPreprensa_summary'); // Sumario fuera de la tabla
+        const proposalSubtotal = document.getElementById('proposalSubtotal');
+        const proposalTotalARS = document.getElementById('proposalTotalARS');
+        const porcentajeComisionInput = document.getElementById('porcentajeComision'); // Referencia al input de comisión
+
+        // Otros elementos de la UI que se ocultarán para el PDF
+        const header = document.querySelector('h1');
+        const introText = document.querySelector('p.text-center');
+        const resultsSection = document.getElementById('results');
+        const savedQuotesSection = document.getElementById('savedQuotesSection');
+
+        const elementsToHide = [
+            cotizadorForm,
+            header,
+            introText,
+            resultsSection,
+            savedQuotesSection,
+            systemMessage
+        ];
         
         /**
          * Muestra un mensaje temporal en la interfaz de usuario.
@@ -376,7 +513,8 @@
             switch(type) {
                 case 'success': bgColor = 'bg-green-600'; break;
                 case 'error': bgColor = 'bg-red-600'; break;
-                default: bgColor = 'bg-blue-600'; break;
+                case 'warning': bgColor = 'bg-yellow-500'; break;
+                default: bgColor = 'bg-red-600'; break; // Usar el rojo de CHIOZZI para info/default
             }
             systemMessage.className = `fixed bottom-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-100 ${bgColor}`;
 
@@ -391,16 +529,20 @@
          * @returns {Object} Un objeto con los resultados de los cálculos.
          */
         function calculateQuote(data) {
-            const { cantidad, avanceEtiqueta, anchoEtiqueta, tipoImpresion, sustrato, barniz, laminado, superficieStamping, costoPrimer, gastosPrePrensa, cantidadCajas, destinoEnvio, cotizacionDolar, porcentajeUtilidad, porcentajeComision, porcentajeIIBB } = data;
+            // Usa la comisión del usuario si está logueado, de lo contrario usa la del formulario
+            const currentPorcentajeComision = userRole === 'vendedor' ? userCommission : data.porcentajeComision;
+
+            const { cantidad, avanceEtiqueta, anchoEtiqueta, coloresImpresion, tintasBlancas, sustrato, barniz, laminado, superficieStamping, costoPrimer, gastosPrePrensa, cantidadCajas, destinoEnvio, cotizacionDolar, porcentajeUtilidad, porcentajeIIBB } = data;
 
             // Constantes y valores del Excel
             const anchoBanda = 330; // mm
             const boca = 4; // Asumimos un valor por defecto.
-            const ppi = costosImpresion[tipoImpresion].ppi_c4; // Asumimos 4 colores
-            const scrap = 30; // ML
+            const scrap = 30; // ML, valor numérico en el cálculo de metros lineales
+            const scrapFactor = scrap / 1000; // Convertir ML a un factor para sumar
 
             // Cálculos básicos
-            const metrosLineales = (cantidad / boca) * (avanceEtiqueta / 1000) / 1000;
+            const mlProduccion = (cantidad / boca) * (avanceEtiqueta / 1000); 
+            const metrosLineales = mlProduccion * (1 + scrapFactor); // Aplica el scrap aquí
             const metrosCuadrados = metrosLineales * (anchoBanda / 1000);
 
             // Costos
@@ -411,10 +553,12 @@
             const costoPrimerTotal = costoPrimer * metrosCuadrados; // Simplificado
             const costoPrePrensaUSD = gastosPrePrensa;
 
-            // Costo de impresión
-            const costoImpresion = (metrosLineales / 1000) * (ppi / 100);
+            // Costo de impresión (combinando colores y tintas blancas)
+            const costoMLColores = costosImpresion.colores[coloresImpresion] || 0;
+            const costoMLBlancas = costosImpresion.tintasBlancas[tintasBlancas] || 0;
+            const costoImpresion = metrosLineales * (costoMLColores + costoMLBlancas);
 
-            const costoProduccionUSD = costoSustrato + costoBarniz + costoLaminado + costoStamping + costoPrimerTotal + costoImpresion + costoPrePrensaUSD;
+            const costoProduccionUSD = costoSustrato + costoBarniz + costoLaminado + costoStamping + costoPrimerTotal + costoImpresion; // PrePrensa se agrega al subtotal en el PDF
             const costoProduccionARS = costoProduccionUSD * cotizacionDolar;
 
             // Costos adicionales
@@ -422,25 +566,29 @@
             const costoEnvio = costosFijos.envios[destinoEnvio];
             const costoCajas = costosFijos.otros.cajasUnitario * cantidadCajas;
 
-            const subtotal = costoProduccionARS + costoEmbalaje * cotizacionDolar + costoEnvio + costoCajas;
+            const subtotalUSD = costoProduccionUSD + costoEmbalaje + (costoEnvio / cotizacionDolar) + (costoCajas / cotizacionDolar) + costoPrePrensaUSD; // Subtotal en USD, incluyendo preprensa
+            const subtotalARS = subtotalUSD * cotizacionDolar;
+
 
             // Porcentajes
-            const utilidad = subtotal * (porcentajeUtilidad / 100);
-            const comision = (subtotal + utilidad) * (porcentajeComision / 100);
-            const iibb = (subtotal + utilidad + comision) * (porcentajeIIBB / 100);
+            const utilidad = subtotalARS * (porcentajeUtilidad / 100);
+            const comision = (subtotalARS + utilidad) * (currentPorcentajeComision / 100); // Usa la comisión actual
+            const iibb = (subtotalARS + utilidad + comision) * (porcentajeIIBB / 100);
 
-            const totalVenta = subtotal + utilidad + comision + iibb;
-            const costoUnitarioPDF = costosPDF[cantidad];
-            const totalPDF = cantidad * costoUnitarioPDF;
+            const totalVentaARS = subtotalARS + utilidad + comision + iibb;
+            const costoUnitarioPDF = costosPDF[cantidad] || 0; // Costo unitario de PDF, con fallback a 0
+            const totalPDF = cantidad * costoUnitarioPDF; // Total del item en tabla PDF
+
 
             return {
-                costoProduccionUSD: parseFloat(costoProduccionUSD.toFixed(2)),
-                costoTotalARS: parseFloat(subtotal.toFixed(2)), // En el excel, el costo total es el subtotal antes de utilidades, etc.
-                totalVenta: parseFloat(totalVenta.toFixed(2)),
-                costoPorMillar: parseFloat((totalVenta / (cantidad / 1000)).toFixed(2)),
+                costoProduccionUSD: parseFloat(costoProduccionUSD.toFixed(2)), // Costo de producción sin preprensa para el display
+                costoTotalARS: parseFloat(subtotalARS.toFixed(2)), // Subtotal en ARS para el display principal
+                totalVenta: parseFloat(totalVentaARS.toFixed(2)), // Total a vender ARS
+                costoPorMillar: parseFloat((totalVentaARS / (cantidad / 1000)).toFixed(2)),
                 metrosLineales: parseFloat(metrosLineales.toFixed(2)),
-                costoUnitarioPDF: parseFloat(costoUnitarioPDF.toFixed(4)),
-                totalPDF: parseFloat(totalPDF.toFixed(2))
+                costoUnitarioPDF: parseFloat(costoUnitarioPDF.toFixed(4)), // Precio unitario para la tabla PDF
+                totalPDF: parseFloat(totalPDF.toFixed(2)), // Total del item para la tabla PDF
+                subtotalUSD_final: parseFloat(subtotalUSD.toFixed(2)) // Subtotal final en USD (incluye todo menos utilidad, comision, IIBB)
             };
         }
 
@@ -456,7 +604,8 @@
             document.getElementById('cantidad').value = quoteData.cantidad || '8000';
             document.getElementById('anchoEtiqueta').value = quoteData.anchoEtiqueta || '';
             document.getElementById('avanceEtiqueta').value = quoteData.avanceEtiqueta || '';
-            document.getElementById('tipoImpresion').value = quoteData.tipoImpresion || 'CMYK';
+            document.getElementById('coloresImpresion').value = quoteData.coloresImpresion || 'CMYK';
+            document.getElementById('tintasBlancas').value = quoteData.tintasBlancas || 'Sin Blanco';
             document.getElementById('sustrato').value = quoteData.sustrato || 'OPP Metalizado';
             document.getElementById('barniz').value = quoteData.barniz || 'Sin barniz';
             document.getElementById('laminado').value = quoteData.laminado || 'Sin laminado';
@@ -465,15 +614,22 @@
             document.getElementById('gastosPrePrensa').value = quoteData.gastosPrePrensa || 0;
             document.getElementById('cantidadCajas').value = quoteData.cantidadCajas || 1;
             document.getElementById('destinoEnvio').value = quoteData.destinoEnvio || 'No aplica';
-            document.getElementById('porcentajeUtilidad').value = quoteData.porcentajeUtilidad || '';
-            document.getElementById('porcentajeComision').value = quoteData.porcentajeComision || '';
-            document.getElementById('porcentajeIIBB').value = quoteData.porcentajeIIBB || '';
+            document.getElementById('porcentajeUtilidad').value = quoteData.porcentajeUtilidad || 0;
+            // La comisión del formulario se carga desde el perfil del usuario, no desde la cotización guardada
+            // document.getElementById('porcentajeComision').value = quoteData.porcentajeComision || ''; 
+            document.getElementById('porcentajeIIBB').value = quoteData.porcentajeIIBB || 0;
             
+            // Al cargar, establecemos el ID de la cotización que se está editando
+            currentEditingQuoteId = quoteData.id;
+            saveButton.textContent = 'Actualizar Cotización'; // Cambiar texto del botón
+            saveButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            saveButton.classList.add('bg-orange-500', 'hover:bg-orange-600');
+
             // Recalcula y muestra los resultados
             const results = calculateQuote(quoteData);
             updateResultsDisplay(results);
             updateProposalDisplay(quoteData, results);
-            showSystemMessage('Cotización cargada exitosamente.', 'success');
+            showSystemMessage('Cotización cargada exitosamente para edición.', 'success');
         }
 
         /**
@@ -494,13 +650,24 @@
          */
         function updateProposalDisplay(formData, results) {
             proposalDiv.classList.remove('hidden');
-            proposalMedidas.textContent = `${formData.anchoEtiqueta} mm x ${formData.avanceEtiqueta} mm`;
-            proposalMaterial.textContent = formData.sustrato;
-            proposalAcabados.textContent = `${formData.laminado}${formData.barniz !== 'Sin barniz' ? `, ${formData.barniz}` : ''}`;
-            proposalCantidad.textContent = formData.cantidad.toLocaleString('es-AR');
-            proposalPrecioUnitario.textContent = `USD ${results.costoUnitarioPDF.toFixed(4)}`;
-            proposalTotal.textContent = `USD ${results.totalPDF.toFixed(2)}`;
-            proposalPreprensa.textContent = formData.gastosPrePrensa.toFixed(2);
+
+            proposalCliente.textContent = formData.cliente || '';
+            proposalVendedor.textContent = formData.vendedor || '';
+            proposalFecha.textContent = new Date().toLocaleDateString('es-AR');
+            proposalCotizacionId.textContent = formData.cotizacionId || 'N/A';
+            
+            // Datos de la tabla
+            proposalMedidas_table.textContent = `${formData.anchoEtiqueta || 0} mm x ${formData.avanceEtiqueta || 0} mm`;
+            proposalMaterial_table.textContent = formData.sustrato || 'N/A';
+            proposalAcabados_table.textContent = `${formData.laminado || 'Sin laminado'}${formData.barniz !== 'Sin barniz' && formData.barniz ? `, ${formData.barniz}` : ''}`;
+            proposalCantidad_table.textContent = (formData.cantidad || 0).toLocaleString('es-AR');
+            proposalPrecioUnitario_table.textContent = `USD ${results.costoUnitarioPDF.toFixed(4)}`; 
+            proposalTotal_table.textContent = `USD ${results.totalPDF.toFixed(2)}`; 
+
+            // Resumen de costos
+            proposalSubtotal.textContent = results.subtotalUSD_final.toFixed(2); // Subtotal USD incluyendo preprensa
+            proposalPreprensa_summary.textContent = formData.gastosPrePrensa.toFixed(2); // Gastos de preprensa
+            proposalTotalARS.textContent = results.totalVenta.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }); // Total a vender ARS
         }
 
         /**
@@ -514,28 +681,140 @@
             } else {
                 quotes.forEach(quote => {
                     const quoteElement = document.createElement('div');
-                    quoteElement.className = 'bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors duration-200';
+                    quoteElement.className = 'bg-red-50 p-4 rounded-lg shadow-sm border border-red-200 cursor-pointer hover:bg-red-100 transition-colors duration-200 flex justify-between items-center';
                     quoteElement.innerHTML = `
-                        <p class="font-bold text-gray-800">Cotización #<span class="text-indigo-600">${quote.cotizacionId || 'N/A'}</span></p>
-                        <p class="text-sm text-gray-500">Cliente: ${quote.cliente || 'Desconocido'}</p>
-                        <p class="text-sm text-gray-600">Total: $ ${quote.totalVenta.toLocaleString('es-AR')}</p>
+                        <div>
+                            <p class="font-bold text-gray-800">Cotización #<span class="text-red-600">${quote.cotizacionId || 'N/A'}</span></p>
+                            <p class="text-sm text-gray-500">Cliente: ${quote.cliente || 'Desconocido'}</p>
+                            <p class="text-sm text-gray-600">Total Venta: ${quote.totalVenta.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="load-btn px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200" data-id="${quote.id}">Cargar</button>
+                            <button class="delete-btn px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200" data-id="${quote.id}">Eliminar</button>
+                        </div>
                     `;
-                    quoteElement.addEventListener('click', () => loadQuoteToForm(quote));
+                    // Asignamos el ID de Firestore al botón de cargar para poder usarlo en la edición
+                    quoteElement.querySelector('.load-btn').dataset.firestoreId = quote.id;
                     savedQuotesList.appendChild(quoteElement);
+                });
+
+                // Agrega listeners a los botones de Cargar y Eliminar
+                savedQuotesList.querySelectorAll('.load-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const firestoreId = e.target.dataset.firestoreId; // Usamos el ID de Firestore
+                        const loadedQuote = quotes.find(q => q.id === firestoreId);
+                        if (loadedQuote) {
+                            loadQuoteToForm(loadedQuote);
+                        }
+                    });
+                });
+
+                savedQuotesList.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const firestoreId = e.target.dataset.id;
+                        if (!firestoreId) {
+                            showSystemMessage('Error: No se encontró el ID de la cotización a eliminar.', 'error');
+                            return;
+                        }
+                        showSystemMessage('Eliminando cotización...', 'info');
+                        try {
+                            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/cotizaciones`, firestoreId));
+                            showSystemMessage('Cotización eliminada exitosamente.', 'success');
+                        } catch (error) {
+                            console.error("Error al eliminar la cotización: ", error);
+                            showSystemMessage('Error al eliminar la cotización. Intenta de nuevo.', 'error');
+                        }
+                    });
                 });
             }
         }
 
-        // --- Manejadores de eventos ---
-        form.addEventListener('input', () => {
-            const formData = {
+        // --- Manejadores de eventos de autenticación ---
+        loginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = authEmailInput.value;
+            const password = authPasswordInput.value;
+
+            if (!email || !password) {
+                showSystemMessage('Por favor, ingresa email y contraseña.', 'warning');
+                return;
+            }
+
+            try {
+                showSystemMessage('Iniciando sesión...', 'info');
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged manejará el resto
+            } catch (error) {
+                console.error("Error al iniciar sesión: ", error);
+                showSystemMessage(`Error al iniciar sesión: ${error.message}`, 'error');
+            }
+        });
+
+        registerBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = authEmailInput.value;
+            const password = authPasswordInput.value;
+
+            if (!email || !password) {
+                showSystemMessage('Por favor, ingresa email y contraseña para registrarte.', 'warning');
+                return;
+            }
+
+            try {
+                showSystemMessage('Registrando usuario...', 'info');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUser = userCredential.user;
+
+                // Definir un rol y comisión por defecto para nuevos usuarios
+                let defaultRole = 'vendedor';
+                let defaultCommission = 5; // 5% por defecto
+
+                // Asignar rol de admin si el email es específico (temporal para testing)
+                if (email === 'admin@example.com') {
+                    defaultRole = 'admin';
+                    defaultCommission = 10; // Admin puede tener una comisión diferente o capacidad de cambiarla
+                }
+
+                // Guardar información adicional del usuario en Firestore
+                await setDoc(doc(db, `artifacts/${appId}/public/data/users`, newUser.uid), {
+                    email: newUser.email,
+                    role: defaultRole,
+                    commission: defaultCommission,
+                    createdAt: new Date().toISOString()
+                });
+
+                showSystemMessage('Usuario registrado y logueado exitosamente.', 'success');
+                // onAuthStateChanged manejará el resto
+            } catch (error) {
+                console.error("Error al registrar usuario: ", error);
+                showSystemMessage(`Error al registrar: ${error.message}`, 'error');
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showSystemMessage('Sesión cerrada exitosamente.', 'success');
+                // onAuthStateChanged manejará el resto
+            } catch (error) {
+                console.error("Error al cerrar sesión: ", error);
+                showSystemMessage(`Error al cerrar sesión: ${error.message}`, 'error');
+            }
+        });
+
+
+        // Event listener para exportar a PDF
+        exportPdfButton.addEventListener('click', () => {
+            // Forzar una actualización de la propuesta con los datos actuales del formulario
+            const currentFormData = {
                 cliente: document.getElementById('cliente').value,
                 vendedor: document.getElementById('vendedor').value,
                 cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
                 cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
                 anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
                 avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
-                tipoImpresion: document.getElementById('tipoImpresion').value,
+                coloresImpresion: document.getElementById('coloresImpresion').value,
+                tintasBlancas: document.getElementById('tintasBlancas').value,
                 sustrato: document.getElementById('sustrato').value,
                 barniz: document.getElementById('barniz').value,
                 laminado: document.getElementById('laminado').value,
@@ -545,83 +824,34 @@
                 cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
                 destinoEnvio: document.getElementById('destinoEnvio').value,
                 porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
-                porcentajeComision: parseFloat(document.getElementById('porcentajeComision').value) || 0,
+                porcentajeComision: parseFloat(porcentajeComisionInput.value) || 0,
                 porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
             };
+            const currentResults = calculateQuote(currentFormData);
+            updateProposalDisplay(currentFormData, currentResults); // Asegura que la propuesta esté actualizada
 
-            const results = calculateQuote(formData);
-            updateResultsDisplay(results);
-            updateProposalDisplay(formData, results);
-        });
-
-        saveButton.addEventListener('click', async (e) => {
-            e.preventDefault();
+            const element = document.getElementById('proposal'); // Selecciona la sección de la propuesta
             
-            if (!db || !userId) {
-                showSystemMessage('Error: Firestore no está inicializado o el usuario no está autenticado.', 'error');
-                return;
-            }
+            // Ocultar todos los elementos de la UI excepto la propuesta
+            elementsToHide.forEach(el => el.classList.add('hide-for-pdf'));
+            proposalDiv.classList.remove('hidden'); // Asegurarse de que la propuesta esté visible
 
-            // Realiza la transacción para obtener el último número y guardar
-            try {
-                await runTransaction(db, async (transaction) => {
-                    // Referencia al documento que almacena el contador
-                    const counterDocRef = doc(db, `artifacts/${appId}/public/data/cotizaciones_metadata`);
-                    const counterDoc = await transaction.get(counterDocRef);
+            showSystemMessage('Generando PDF...', 'info');
 
-                    let nextId;
-                    if (counterDoc.exists()) {
-                        nextId = counterDoc.data().lastId + 1;
-                    } else {
-                        nextId = 1;
-                        transaction.set(counterDocRef, { lastId: nextId });
-                    }
-                    
-                    const formData = {
-                        cotizacionId: nextId,
-                        cliente: document.getElementById('cliente').value,
-                        vendedor: document.getElementById('vendedor').value,
-                        cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
-                        cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
-                        anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
-                        avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
-                        tipoImpresion: document.getElementById('tipoImpresion').value,
-                        sustrato: document.getElementById('sustrato').value,
-                        barniz: document.getElementById('barniz').value,
-                        laminado: document.getElementById('laminado').value,
-                        superficieStamping: parseFloat(document.getElementById('superficieStamping').value) || 0,
-                        costoPrimer: parseFloat(document.getElementById('costoPrimer').value) || 0,
-                        gastosPrePrensa: parseFloat(document.getElementById('gastosPrePrensa').value) || 0,
-                        cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
-                        destinoEnvio: document.getElementById('destinoEnvio').value,
-                        porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
-                        porcentajeComision: parseFloat(document.getElementById('porcentajeComision').value) || 0,
-                        porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
-                    };
-
-                    const results = calculateQuote(formData);
-                    const quoteToSave = {
-                        ...formData,
-                        ...results,
-                        createdAt: new Date().toISOString()
-                    };
-
-                    // Guardamos la cotización con el nuevo ID
-                    const quotesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/cotizaciones`);
-                    const newQuoteDocRef = await addDoc(quotesCollectionRef, quoteToSave);
-                    console.log("Document successfully written with ID: ", newQuoteDocRef.id);
-                    
-                    // Actualizamos el contador en una transacción
-                    transaction.update(counterDocRef, { lastId: nextId });
-
-                    // Opcional: actualiza el ID en la UI inmediatamente
-                    cotizacionIdDisplay.textContent = nextId;
-                    showSystemMessage(`Cotización #${nextId} guardada exitosamente.`, 'success');
+            // Añade un pequeño retraso para asegurar que el DOM esté completamente renderizado
+            setTimeout(() => {
+                const options = {
+                    margin:       10,
+                    filename:     `Propuesta_Cotizacion_${proposalCotizacionId.textContent}_${proposalCliente.textContent}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, logging: true, dpi: 192, letterRendering: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(options).from(element).save().then(() => {
+                    // Restaurar todos los elementos de la UI después de generar el PDF
+                    elementsToHide.forEach(el => el.classList.remove('hide-for-pdf'));
                 });
-            } catch (error) {
-                console.error("Transaction failed: ", error);
-                showSystemMessage('Error al guardar la cotización. Intenta de nuevo.', 'error');
-            }
+            }, 500); // Retraso de 500ms
         });
 
         // --- Inicialización de Firebase ---
@@ -632,25 +862,71 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // Sign in with custom token or anonymously if no token is available
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
                 // Listen for authentication state changes
-                onAuthStateChanged(auth, (user) => {
+                onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
+                        userEmail = user.email;
                         userIdDisplay.textContent = userId;
-                        console.log("Firebase initialized for user:", userId);
+                        userEmailDisplay.textContent = userEmail;
+
+                        // Intentar obtener el perfil del usuario de Firestore
+                        const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, userId);
+                        const userDoc = await getDoc(userDocRef);
+
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            userRole = userData.role;
+                            userCommission = userData.commission;
+                            userRoleDisplay.textContent = userRole;
+                            porcentajeComisionInput.value = userCommission; // Rellenar con la comisión del usuario
+                            
+                            // Si es vendedor, el campo de comisión es de solo lectura.
+                            if (userRole === 'vendedor') {
+                                porcentajeComisionInput.setAttribute('disabled', 'true');
+                            } else {
+                                porcentajeComisionInput.removeAttribute('disabled');
+                            }
+
+                            showSystemMessage(`Bienvenido de nuevo, ${userEmail} (${userRole}).`, 'success');
+                        } else {
+                            // Si el usuario existe en Auth pero no en Firestore, crearlo con valores por defecto
+                            let defaultRole = 'vendedor';
+                            let defaultCommission = 5;
+
+                             if (userEmail === 'admin@example.com') { // Permite crear un admin por defecto
+                                defaultRole = 'admin';
+                                defaultCommission = 10;
+                            }
+
+                            await setDoc(userDocRef, {
+                                email: user.email,
+                                role: defaultRole,
+                                commission: defaultCommission,
+                                createdAt: new Date().toISOString()
+                            });
+                            userRole = defaultRole;
+                            userCommission = defaultCommission;
+                            userRoleDisplay.textContent = userRole;
+                            porcentajeComisionInput.value = userCommission;
+                            if (userRole === 'vendedor') {
+                                porcentajeComisionInput.setAttribute('disabled', 'true');
+                            } else {
+                                porcentajeComisionInput.removeAttribute('disabled');
+                            }
+                             showSystemMessage(`Perfil creado para ${userEmail} (${userRole}).`, 'success');
+                        }
+
+                        // Mostrar la interfaz principal y ocultar el formulario de login
+                        mainContent.classList.remove('hidden');
+                        loginForm.classList.add('hidden');
+                        loggedInUserInfo.classList.remove('hidden');
 
                         // Set up real-time listener for quotes
                         const quotesCollection = collection(db, `artifacts/${appId}/users/${userId}/cotizaciones`);
                         onSnapshot(quotesCollection, (snapshot) => {
                             loadingQuotesMessage.classList.add('hidden');
-                            const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Captura el ID de Firestore
                             renderSavedQuotes(quotes);
                         }, (error) => {
                             console.error("Error listening to collection:", error);
@@ -658,21 +934,169 @@
                         });
 
                     } else {
+                        // Usuario no logueado
                         userId = null;
+                        userEmail = null;
+                        userRole = null;
+                        userCommission = initialFormCommission; // Restablecer la comisión a la inicial del formulario
                         userIdDisplay.textContent = 'No autenticado';
-                        console.log("No user is signed in.");
-                        loadingQuotesMessage.textContent = 'Inicia sesión para ver tus cotizaciones.';
+                        userEmailDisplay.textContent = '';
+                        userRoleDisplay.textContent = '';
+                        porcentajeComisionInput.value = initialFormCommission;
+                        porcentajeComisionInput.removeAttribute('disabled'); // Habilitar si no hay usuario logueado
+
+                        // Ocultar la interfaz principal y mostrar el formulario de login
+                        mainContent.classList.add('hidden');
+                        loginForm.classList.remove('hidden');
+                        loggedInUserInfo.classList.add('hidden');
+                        showSystemMessage('Por favor, inicia sesión o regístrate.', 'info');
                     }
+                     // Trigger initial calculation (important for showing default values if not logged in)
+                    cotizadorForm.dispatchEvent(new Event('input'));
                 });
 
-                // Trigger initial calculation
-                form.dispatchEvent(new Event('input'));
+                // Si hay un token de autenticación inicial (desde el entorno Canvas), úsalo
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else if (!auth.currentUser) {
+                    // Si no hay token y no hay usuario, iniciar sesión anónimamente
+                    await signInAnonymously(auth);
+                }
                 
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
                 showSystemMessage('Error al iniciar la aplicación. Verifica la configuración.', 'error');
             }
         }
+
+        // --- Manejadores de eventos del formulario de cotización (movidos dentro de window.onload para evitar ReferenceError) ---
+        // Estos listeners se adjuntarán una vez que el DOM esté completamente cargado y Firebase inicializado.
+        // Se definen aquí para que puedan acceder a las variables de ámbito superior.
+        const attachFormEventListeners = () => {
+            cotizadorForm.addEventListener('input', () => {
+                const formData = {
+                    cliente: document.getElementById('cliente').value,
+                    vendedor: document.getElementById('vendedor').value,
+                    cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
+                    cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
+                    anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
+                    avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
+                    coloresImpresion: document.getElementById('coloresImpresion').value,
+                    tintasBlancas: document.getElementById('tintasBlancas').value,
+                    sustrato: document.getElementById('sustrato').value,
+                    barniz: document.getElementById('barniz').value,
+                    laminado: document.getElementById('laminado').value,
+                    superficieStamping: parseFloat(document.getElementById('superficieStamping').value) || 0,
+                    costoPrimer: parseFloat(document.getElementById('costoPrimer').value) || 0,
+                    gastosPrePrensa: parseFloat(document.getElementById('gastosPrePrensa').value) || 0,
+                    cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
+                    destinoEnvio: document.getElementById('destinoEnvio').value,
+                    porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
+                    porcentajeComision: parseFloat(porcentajeComisionInput.value) || 0, // Obtener del input para admins
+                    porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
+                };
+
+                const results = calculateQuote(formData);
+                updateResultsDisplay(results);
+                updateProposalDisplay(formData, results);
+
+                // Si hay una cotización cargada y se modifican los campos, el botón vuelve a "Guardar"
+                // a menos que sea el mismo ID de la cotización cargada.
+                if (currentEditingQuoteId !== null && cotizacionIdDisplay.textContent !== String(currentEditingQuoteId)) {
+                     saveButton.textContent = 'Guardar Cotización';
+                     saveButton.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                     saveButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                     currentEditingQuoteId = null; // Reiniciar para nueva cotización
+                }
+            });
+
+            saveButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                if (!db || !userId) {
+                    showSystemMessage('Error: Debes iniciar sesión para guardar cotizaciones.', 'error');
+                    return;
+                }
+
+                const formData = {
+                    cliente: document.getElementById('cliente').value,
+                    vendedor: document.getElementById('vendedor').value,
+                    cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
+                    cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
+                    anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
+                    avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
+                    coloresImpresion: document.getElementById('coloresImpresion').value,
+                    tintasBlancas: document.getElementById('tintasBlancas').value,
+                    sustrato: document.getElementById('sustrato').value,
+                    barniz: document.getElementById('barniz').value,
+                    laminado: document.getElementById('laminado').value,
+                    superficieStamping: parseFloat(document.getElementById('superficieStamping').value) || 0,
+                    costoPrimer: parseFloat(document.getElementById('costoPrimer').value) || 0,
+                    gastosPrePrensa: parseFloat(document.getElementById('gastosPrePrensa').value) || 0,
+                    cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
+                    destinoEnvio: document.getElementById('destinoEnvio').value,
+                    porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
+                    porcentajeComision: parseFloat(porcentajeComisionInput.value) || 0, // Obtener del input para guardar
+                    porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
+                };
+
+                const results = calculateQuote(formData);
+                const quoteToSave = {
+                    ...formData,
+                    ...results,
+                    userId: userId, // Guardar el ID del usuario que creó la cotización
+                    userEmail: userEmail, // Guardar el email del usuario
+                    userRole: userRole, // Guardar el rol del usuario
+                    createdAt: new Date().toISOString()
+                };
+
+                if (currentEditingQuoteId) {
+                    // Actualizar cotización existente
+                    try {
+                        const quoteDocRef = doc(db, `artifacts/${appId}/users/${userId}/cotizaciones`, currentEditingQuoteId);
+                        await updateDoc(quoteDocRef, quoteToSave);
+                        showSystemMessage(`Cotización #${formData.cotizacionId} actualizada exitosamente.`, 'success');
+                        currentEditingQuoteId = null; // Resetear después de actualizar
+                        saveButton.textContent = 'Guardar Cotización'; // Volver al texto original
+                        saveButton.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                        saveButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                    } catch (error) {
+                        console.error("Error al actualizar la cotización: ", error);
+                        showSystemMessage('Error al actualizar la cotización. Intenta de nuevo.', 'error');
+                    }
+                } else {
+                    // Guardar nueva cotización (con manejo de contador)
+                    try {
+                        await runTransaction(db, async (transaction) => {
+                            const counterDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'counters', 'cotizaciones_id_counter');
+                            const counterDoc = await transaction.get(counterDocRef);
+
+                            let nextId;
+                            if (counterDoc.exists()) {
+                                nextId = counterDoc.data().lastId + 1;
+                            } else {
+                                nextId = 1;
+                                transaction.set(counterDocRef, { lastId: nextId });
+                            }
+                            
+                            const newQuoteData = { ...quoteToSave, cotizacionId: nextId };
+                            const quotesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/cotizaciones`);
+                            const newQuoteDocRef = await addDoc(quotesCollectionRef, newQuoteData);
+                            console.log("Document successfully written with ID: ", newQuoteDocRef.id);
+                            
+                            transaction.update(counterDocRef, { lastId: nextId });
+
+                            cotizacionIdDisplay.textContent = nextId;
+                            showSystemMessage(`Cotización #${nextId} guardada exitosamente.`, 'success');
+                        });
+                    } catch (error) {
+                        console.error("Transaction failed: ", error);
+                        showSystemMessage('Error al guardar la cotización. Intenta de nuevo.', 'error');
+                    }
+                }
+            });
+        };
+        attachFormEventListeners(); // Adjuntar listeners después de la definición de funciones y variables
     </script>
 </body>
 </html>
