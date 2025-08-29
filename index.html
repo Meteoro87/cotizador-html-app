@@ -364,8 +364,39 @@
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let firebaseConfig = {}; // Declarar como let para poder asignarle valor después del try-catch
+
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            if (Object.keys(firebaseConfig).length === 0) {
+                console.error("ERROR: __firebase_config está vacía o no se ha definido correctamente.");
+                // Intentar mostrar un mensaje en la UI si el sistema de mensajes está disponible
+                // Esto puede fallar si Firebase no se inicializa, pero lo intentamos.
+                document.addEventListener('DOMContentLoaded', () => {
+                    const sysMsg = document.getElementById('systemMessage');
+                    if (sysMsg) {
+                        sysMsg.textContent = 'Error: Configuración de Firebase no cargada. Revisa variables de entorno.';
+                        sysMsg.className = `fixed bottom-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-100 bg-red-600`;
+                    }
+                });
+            } else {
+                console.log("Firebase config loaded successfully:", firebaseConfig);
+            }
+        } catch (e) {
+            console.error("ERROR: No se pudo parsear __firebase_config. Asegúrate de que es un JSON válido en una sola línea.", e);
+            document.addEventListener('DOMContentLoaded', () => {
+                const sysMsg = document.getElementById('systemMessage');
+                if (sysMsg) {
+                    sysMsg.textContent = 'Error crítico: Formato de Firebase config inválido. Revisa variables de entorno.';
+                    sysMsg.className = `fixed bottom-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-100 bg-red-600`;
+                }
+            });
+        }
+        
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        console.log("App ID:", appId); // Diagnóstico
+        console.log("Initial Auth Token (present if not null):", initialAuthToken ? "Yes" : "No"); // Diagnóstico
 
         // --- Configuración de la aplicación ---
         let app;
@@ -858,6 +889,13 @@
         window.onload = async function() {
             try {
                 // Initialize Firebase
+                // Solo inicializar si firebaseConfig no está vacía
+                if (Object.keys(firebaseConfig).length === 0) {
+                    showSystemMessage('Error crítico: Firebase no inicializado. Revisa las variables de entorno.', 'error');
+                    console.error("Firebase Initialization Failed: firebaseConfig is empty.");
+                    return; // Detener la ejecución si firebaseConfig está vacía
+                }
+
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
