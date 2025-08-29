@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Gráfico Avanzado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .container-main {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+
+    <div class="container-main max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10 transition-all duration-300">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-indigo-700 mb-6 sm:mb-8 tracking-tight">
+            Cotizador de Etiquetas
+        </h1>
+        <p class="text-center text-gray-500 mb-8 sm:mb-10 text-lg">
+            Completa los detalles para generar una cotización. Los datos se guardarán automáticamente en Firestore.
+        </p>
+
+        <!-- Formulario principal de cotización -->
+        <form id="cotizadorForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Columna izquierda -->
+                <div class="space-y-6">
+                    <!-- Información del trabajo -->
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Información del Trabajo</h2>
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-gray-700">Cliente</span>
+                                <input id="cliente" type="text" placeholder="Nombre del Cliente" value="MESTIZO S.R.L." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Vendedor</span>
+                                <input id="vendedor" type="text" placeholder="Nombre del Vendedor" value="Javier Avalos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Cotización Dolar (U$S)</span>
+                                <input id="cotizacionDolar" type="number" step="0.01" value="1305" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna derecha -->
+                <div class="space-y-6">
+                     <!-- Detalles de la Etiqueta -->
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Detalles de la Etiqueta</h2>
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-gray-700">Cantidad (Etiquetas)</span>
+                                <select id="cantidad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <option value="8000">8,000</option>
+                                    <option value="15000">15,000</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Ancho Etiqueta (mm)</span>
+                                <input id="anchoEtiqueta" type="number" value="212" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Avance Etiqueta (mm)</span>
+                                <input id="avanceEtiqueta" type="number" value="50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Tipo de Impresión</span>
+                                <select id="tipoImpresion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <option value="CMYK">CMYK</option>
+                                    <option value="STANDARD WHITE">Standard White</option>
+                                    <option value="W PREMIUM">W Premium</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-gray-700">Sustrato</span>
+                                <select id="sustrato" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <option value="OPP Blanco">OPP Blanco</option>
+                                    <option value="OPP Metalizado">OPP Metalizado</option>
+                                    <option value="Papel Ilustración">Papel Ilustración</option>
+                                    <option value="Papel Ilustración Frío/Húmedo">Papel Ilustración Frío/Húmedo</option>
+                                    <option value="OPP Transparente">OPP Transparente</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Acabados y Otros Costos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Acabados -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Acabados</h2>
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="text-gray-700">Tipo de Barniz</span>
+                            <select id="barniz" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="Sin barniz">Sin barniz</option>
+                                <option value="Barniz al agua">Barniz al agua</option>
+                                <option value="Barniz UV Mate">Barniz UV Mate</option>
+                                <option value="Barniz UV Brillante">Barniz UV Brillante</option>
+                                <option value="Barniz Reimprimible">Barniz Reimprimible</option>
+                            </select>
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">Tipo de Laminado</span>
+                            <select id="laminado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="Laminado Brillante Frío">Laminado Brillante Frío</option>
+                                <option value="Sin laminado">Sin laminado</option>
+                                <option value="Laminado Brillante UV">Laminado Brillante UV</option>
+                                <option value="Laminado Mate Frío">Laminado Mate Frío</option>
+                                <option value="Laminado Mate UV">Laminado Mate UV</option>
+                            </select>
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">Superficie de Stamping (%)</span>
+                            <input id="superficieStamping" type="number" step="0.1" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">Costo de Primer ($/m2)</span>
+                            <input id="costoPrimer" type="number" step="0.01" value="0.03892317" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Otros Costos y Descuentos -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Otros Costos y Porcentajes</h2>
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="text-gray-700">Gasto de Pre-prensa (U$S)</span>
+                            <input id="gastosPrePrensa" type="number" step="0.01" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">Cajas</span>
+                            <input id="cantidadCajas" type="number" value="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">Destino de Envío</span>
+                            <select id="destinoEnvio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="Rosario">Rosario</option>
+                                <option value="Rafaela">Rafaela</option>
+                                <option value="Santa Fe">Santa Fe</option>
+                                <option value="Bs As">Bs As</option>
+                                <option value="No aplica">No aplica</option>
+                            </select>
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">% de Utilidad</span>
+                            <input id="porcentajeUtilidad" type="number" step="0.1" value="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">% de Comisión</span>
+                            <input id="porcentajeComision" type="number" step="0.1" value="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700">% de IIBB</span>
+                            <input id="porcentajeIIBB" type="number" step="0.1" value="1.3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Área de resultados y botones -->
+        <div id="results" class="bg-indigo-50 p-6 rounded-lg shadow-inner border border-indigo-200 mt-6">
+            <h2 class="text-xl font-semibold text-indigo-800 mb-4">Resumen de Cotización</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-indigo-700">
+                <p class="font-medium">Número de Cotización: <span id="cotizacionId" class="font-bold text-indigo-900">0</span></p>
+                <p class="font-medium">Costo de Producción (U$S): <span id="costoProduccionUSD" class="font-bold text-indigo-900">0.00</span></p>
+                <p class="font-medium">Costo Total ($): <span id="costoTotalARS" class="font-bold text-indigo-900">0.00</span></p>
+                <p class="font-medium">Total a Vender ($): <span id="totalVenta" class="font-bold text-indigo-900">0.00</span></p>
+                <p class="font-medium">Costo por Millar ($): <span id="costoPorMillar" class="font-bold text-indigo-900">0.00</span></p>
+                <p class="font-medium">ID de Usuario: <span id="userIdDisplay" class="font-mono text-xs text-indigo-600">Cargando...</span></p>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                <button id="saveButton" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition-colors duration-200">
+                    Guardar Cotización
+                </button>
+            </div>
+        </div>
+        
+        <!-- Sección de Propuesta de Cotización (simula el PDF) -->
+        <div id="proposal" class="mt-10 bg-white p-6 rounded-lg shadow-lg border border-gray-200 hidden">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Propuesta Comercial</h2>
+            <table class="w-full text-left table-auto">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">DESCRIPCIÓN</th>
+                        <th class="py-3 px-6 text-left">MEDIDAS</th>
+                        <th class="py-3 px-6 text-left">MATERIAL</th>
+                        <th class="py-3 px-6 text-left">ACABADOS</th>
+                        <th class="py-3 px-6 text-center">CANTIDAD</th>
+                        <th class="py-3 px-6 text-center">PRECIO UNITARIO</th>
+                        <th class="py-3 px-6 text-center">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm font-light">
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">
+                            <span class="font-medium">Etiq Hummus</span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span id="proposalMedidas"></span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span id="proposalMaterial"></span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span id="proposalAcabados"></span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <span id="proposalCantidad"></span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <span id="proposalPrecioUnitario"></span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <span id="proposalTotal"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="mt-6 text-gray-600">
+                <p class="font-bold">Gastos de preprensa: USD <span id="proposalPreprensa">0.00</span></p>
+                <p class="font-bold mt-2">Estos precios no incluyen IVA.</p>
+                <p class="font-bold mt-2">Dólar BNA Tipo Vendedor, al cierre del día anterior a la facturación.</p>
+            </div>
+        </div>
+
+        <!-- Área de cotizaciones guardadas -->
+        <div class="mt-10">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Cotizaciones Guardadas</h2>
+            <div id="savedQuotesList" class="space-y-4">
+                <p class="text-gray-400 text-center" id="loadingQuotesMessage">Cargando cotizaciones...</p>
+                <!-- Las cotizaciones se insertarán aquí por JavaScript -->
+            </div>
+        </div>
+
+        <!-- Mensajes del sistema -->
+        <div id="systemMessage" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-0">
+            Mensaje del sistema
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Configuración de la aplicación ---
+        let app;
+        let db;
+        let auth;
+        let userId;
+
+        // Base de datos de valores del Excel (hardcoded de los CSVs)
+        const costosFijos = {
+            materiales: {
+                "OPP Metalizado": 0.8,
+                "OPP Blanco": 0.65,
+                "Papel Ilustración": 0.5,
+                "Papel Ilustración Frío/Húmedo": 0.7,
+                "OPP Transparente": 0.67
+            },
+            barnices: {
+                "Sin barniz": 0,
+                "Barniz al agua": 0.03,
+                "Barniz UV Mate": 0.08,
+                "Barniz UV Brillante": 0.05,
+                "Barniz Reimprimible": 0.1
+            },
+            laminados: {
+                "Sin laminado": 0,
+                "Laminado Brillante Frío": 0.25,
+                "Laminado Brillante UV": 0.15,
+                "Laminado Mate Frío": 0.48,
+                "Laminado Mate UV": 0.16
+            },
+            envios: {
+                "Rosario": 1400,
+                "Rafaela": 3400,
+                "Santa Fe": 1600,
+                "Bs As": 2400,
+                "No aplica": 0
+            },
+            horaMaquinas: {
+                "HP": 42.307692307692307
+            },
+            otros: {
+                embalajeM2: 0.02,
+                foilStampingUnitario: 0.8,
+                cajasUnitario: 600
+            },
+            primer: {
+                "DP 680": 0.03892317,
+                "ILP 040": 0.05487396
+            }
+        };
+
+        const costosImpresion = {
+            "CMYK": {
+                ppi_c1: 1.353911753394383,
+                ppi_c4: 5.4156470135775319
+            },
+            "STANDARD WHITE": {
+                ppi_c1: 1.060415759120962,
+                ppi_c4: 4.2416630364838479
+            },
+            "W PREMIUM": {
+                ppi_c1: 1.600222231288305,
+                ppi_c4: 6.40088892515322
+            }
+        };
+
+        const costosPDF = {
+            '8000': 0.06,
+            '15000': 0.053
+        };
+
+        // --- Referencias a los elementos del DOM ---
+        const form = document.getElementById('cotizadorForm');
+        const saveButton = document.getElementById('saveButton');
+        const cotizacionIdDisplay = document.getElementById('cotizacionId');
+        const costoProduccionUSDDisplay = document.getElementById('costoProduccionUSD');
+        const costoTotalARSDisplay = document.getElementById('costoTotalARS');
+        const totalVentaDisplay = document.getElementById('totalVenta');
+        const costoPorMillarDisplay = document.getElementById('costoPorMillar');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const savedQuotesList = document.getElementById('savedQuotesList');
+        const loadingQuotesMessage = document.getElementById('loadingQuotesMessage');
+        const systemMessage = document.getElementById('systemMessage');
+        const proposalDiv = document.getElementById('proposal');
+        const proposalMedidas = document.getElementById('proposalMedidas');
+        const proposalMaterial = document.getElementById('proposalMaterial');
+        const proposalAcabados = document.getElementById('proposalAcabados');
+        const proposalCantidad = document.getElementById('proposalCantidad');
+        const proposalPrecioUnitario = document.getElementById('proposalPrecioUnitario');
+        const proposalTotal = document.getElementById('proposalTotal');
+        const proposalPreprensa = document.getElementById('proposalPreprensa');
+        
+        /**
+         * Muestra un mensaje temporal en la interfaz de usuario.
+         * @param {string} message - El mensaje a mostrar.
+         * @param {string} type - El tipo de mensaje ('success', 'error', 'info').
+         */
+        function showSystemMessage(message, type = 'info') {
+            systemMessage.textContent = message;
+            let bgColor = '';
+            switch(type) {
+                case 'success': bgColor = 'bg-green-600'; break;
+                case 'error': bgColor = 'bg-red-600'; break;
+                default: bgColor = 'bg-blue-600'; break;
+            }
+            systemMessage.className = `fixed bottom-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-100 ${bgColor}`;
+
+            setTimeout(() => {
+                systemMessage.className = `fixed bottom-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-transform duration-300 transform-gpu opacity-0`;
+            }, 3000);
+        }
+
+        /**
+         * Calcula los valores de la cotización basados en los datos del formulario y los valores fijos.
+         * @param {Object} data - Objeto con los datos del formulario.
+         * @returns {Object} Un objeto con los resultados de los cálculos.
+         */
+        function calculateQuote(data) {
+            const { cantidad, avanceEtiqueta, anchoEtiqueta, tipoImpresion, sustrato, barniz, laminado, superficieStamping, costoPrimer, gastosPrePrensa, cantidadCajas, destinoEnvio, cotizacionDolar, porcentajeUtilidad, porcentajeComision, porcentajeIIBB } = data;
+
+            // Constantes y valores del Excel
+            const anchoBanda = 330; // mm
+            const boca = 4; // Asumimos un valor por defecto.
+            const ppi = costosImpresion[tipoImpresion].ppi_c4; // Asumimos 4 colores
+            const scrap = 30; // ML
+
+            // Cálculos básicos
+            const metrosLineales = (cantidad / boca) * (avanceEtiqueta / 1000) / 1000;
+            const metrosCuadrados = metrosLineales * (anchoBanda / 1000);
+
+            // Costos
+            const costoSustrato = costosFijos.materiales[sustrato] * metrosCuadrados;
+            const costoBarniz = costosFijos.barnices[barniz] * metrosCuadrados;
+            const costoLaminado = costosFijos.laminados[laminado] * metrosCuadrados;
+            const costoStamping = superficieStamping * costosFijos.otros.foilStampingUnitario; // Simplificado
+            const costoPrimerTotal = costoPrimer * metrosCuadrados; // Simplificado
+            const costoPrePrensaUSD = gastosPrePrensa;
+
+            // Costo de impresión
+            const costoImpresion = (metrosLineales / 1000) * (ppi / 100);
+
+            const costoProduccionUSD = costoSustrato + costoBarniz + costoLaminado + costoStamping + costoPrimerTotal + costoImpresion + costoPrePrensaUSD;
+            const costoProduccionARS = costoProduccionUSD * cotizacionDolar;
+
+            // Costos adicionales
+            const costoEmbalaje = costosFijos.otros.embalajeM2 * metrosCuadrados;
+            const costoEnvio = costosFijos.envios[destinoEnvio];
+            const costoCajas = costosFijos.otros.cajasUnitario * cantidadCajas;
+
+            const subtotal = costoProduccionARS + costoEmbalaje * cotizacionDolar + costoEnvio + costoCajas;
+
+            // Porcentajes
+            const utilidad = subtotal * (porcentajeUtilidad / 100);
+            const comision = (subtotal + utilidad) * (porcentajeComision / 100);
+            const iibb = (subtotal + utilidad + comision) * (porcentajeIIBB / 100);
+
+            const totalVenta = subtotal + utilidad + comision + iibb;
+            const costoUnitarioPDF = costosPDF[cantidad];
+            const totalPDF = cantidad * costoUnitarioPDF;
+
+            return {
+                costoProduccionUSD: parseFloat(costoProduccionUSD.toFixed(2)),
+                costoTotalARS: parseFloat(subtotal.toFixed(2)), // En el excel, el costo total es el subtotal antes de utilidades, etc.
+                totalVenta: parseFloat(totalVenta.toFixed(2)),
+                costoPorMillar: parseFloat((totalVenta / (cantidad / 1000)).toFixed(2)),
+                metrosLineales: parseFloat(metrosLineales.toFixed(2)),
+                costoUnitarioPDF: parseFloat(costoUnitarioPDF.toFixed(4)),
+                totalPDF: parseFloat(totalPDF.toFixed(2))
+            };
+        }
+
+        /**
+         * Carga los datos de una cotización guardada en el formulario.
+         * @param {Object} quoteData - El objeto de datos de la cotización.
+         */
+        function loadQuoteToForm(quoteData) {
+            document.getElementById('cotizacionId').textContent = quoteData.cotizacionId || 'N/A';
+            document.getElementById('cliente').value = quoteData.cliente || '';
+            document.getElementById('vendedor').value = quoteData.vendedor || '';
+            document.getElementById('cotizacionDolar').value = quoteData.cotizacionDolar || '';
+            document.getElementById('cantidad').value = quoteData.cantidad || '8000';
+            document.getElementById('anchoEtiqueta').value = quoteData.anchoEtiqueta || '';
+            document.getElementById('avanceEtiqueta').value = quoteData.avanceEtiqueta || '';
+            document.getElementById('tipoImpresion').value = quoteData.tipoImpresion || 'CMYK';
+            document.getElementById('sustrato').value = quoteData.sustrato || 'OPP Metalizado';
+            document.getElementById('barniz').value = quoteData.barniz || 'Sin barniz';
+            document.getElementById('laminado').value = quoteData.laminado || 'Sin laminado';
+            document.getElementById('superficieStamping').value = quoteData.superficieStamping || 0;
+            document.getElementById('costoPrimer').value = quoteData.costoPrimer || 0.03892317;
+            document.getElementById('gastosPrePrensa').value = quoteData.gastosPrePrensa || 0;
+            document.getElementById('cantidadCajas').value = quoteData.cantidadCajas || 1;
+            document.getElementById('destinoEnvio').value = quoteData.destinoEnvio || 'No aplica';
+            document.getElementById('porcentajeUtilidad').value = quoteData.porcentajeUtilidad || '';
+            document.getElementById('porcentajeComision').value = quoteData.porcentajeComision || '';
+            document.getElementById('porcentajeIIBB').value = quoteData.porcentajeIIBB || '';
+            
+            // Recalcula y muestra los resultados
+            const results = calculateQuote(quoteData);
+            updateResultsDisplay(results);
+            updateProposalDisplay(quoteData, results);
+            showSystemMessage('Cotización cargada exitosamente.', 'success');
+        }
+
+        /**
+         * Actualiza la interfaz con los resultados de la cotización.
+         * @param {Object} results - Objeto con los resultados calculados.
+         */
+        function updateResultsDisplay(results) {
+            costoProduccionUSDDisplay.textContent = results.costoProduccionUSD.toLocaleString('es-AR', { style: 'currency', currency: 'USD' });
+            costoTotalARSDisplay.textContent = results.costoTotalARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+            totalVentaDisplay.textContent = results.totalVenta.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+            costoPorMillarDisplay.textContent = results.costoPorMillar.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+        }
+
+        /**
+         * Actualiza la sección de la propuesta con los valores calculados.
+         * @param {Object} formData - Objeto con los datos del formulario.
+         * @param {Object} results - Objeto con los resultados calculados.
+         */
+        function updateProposalDisplay(formData, results) {
+            proposalDiv.classList.remove('hidden');
+            proposalMedidas.textContent = `${formData.anchoEtiqueta} mm x ${formData.avanceEtiqueta} mm`;
+            proposalMaterial.textContent = formData.sustrato;
+            proposalAcabados.textContent = `${formData.laminado}${formData.barniz !== 'Sin barniz' ? `, ${formData.barniz}` : ''}`;
+            proposalCantidad.textContent = formData.cantidad.toLocaleString('es-AR');
+            proposalPrecioUnitario.textContent = `USD ${results.costoUnitarioPDF.toFixed(4)}`;
+            proposalTotal.textContent = `USD ${results.totalPDF.toFixed(2)}`;
+            proposalPreprensa.textContent = formData.gastosPrePrensa.toFixed(2);
+        }
+
+        /**
+         * Renderiza la lista de cotizaciones guardadas.
+         * @param {Array<Object>} quotes - Array de objetos de cotización.
+         */
+        function renderSavedQuotes(quotes) {
+            savedQuotesList.innerHTML = '';
+            if (quotes.length === 0) {
+                savedQuotesList.innerHTML = '<p class="text-gray-400 text-center">No hay cotizaciones guardadas. ¡Crea una ahora!</p>';
+            } else {
+                quotes.forEach(quote => {
+                    const quoteElement = document.createElement('div');
+                    quoteElement.className = 'bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors duration-200';
+                    quoteElement.innerHTML = `
+                        <p class="font-bold text-gray-800">Cotización #<span class="text-indigo-600">${quote.cotizacionId || 'N/A'}</span></p>
+                        <p class="text-sm text-gray-500">Cliente: ${quote.cliente || 'Desconocido'}</p>
+                        <p class="text-sm text-gray-600">Total: $ ${quote.totalVenta.toLocaleString('es-AR')}</p>
+                    `;
+                    quoteElement.addEventListener('click', () => loadQuoteToForm(quote));
+                    savedQuotesList.appendChild(quoteElement);
+                });
+            }
+        }
+
+        // --- Manejadores de eventos ---
+        form.addEventListener('input', () => {
+            const formData = {
+                cliente: document.getElementById('cliente').value,
+                vendedor: document.getElementById('vendedor').value,
+                cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
+                cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
+                anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
+                avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
+                tipoImpresion: document.getElementById('tipoImpresion').value,
+                sustrato: document.getElementById('sustrato').value,
+                barniz: document.getElementById('barniz').value,
+                laminado: document.getElementById('laminado').value,
+                superficieStamping: parseFloat(document.getElementById('superficieStamping').value) || 0,
+                costoPrimer: parseFloat(document.getElementById('costoPrimer').value) || 0,
+                gastosPrePrensa: parseFloat(document.getElementById('gastosPrePrensa').value) || 0,
+                cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
+                destinoEnvio: document.getElementById('destinoEnvio').value,
+                porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
+                porcentajeComision: parseFloat(document.getElementById('porcentajeComision').value) || 0,
+                porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
+            };
+
+            const results = calculateQuote(formData);
+            updateResultsDisplay(results);
+            updateProposalDisplay(formData, results);
+        });
+
+        saveButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            if (!db || !userId) {
+                showSystemMessage('Error: Firestore no está inicializado o el usuario no está autenticado.', 'error');
+                return;
+            }
+
+            // Realiza la transacción para obtener el último número y guardar
+            try {
+                await runTransaction(db, async (transaction) => {
+                    // Referencia al documento que almacena el contador
+                    const counterDocRef = doc(db, `artifacts/${appId}/public/data/cotizaciones_metadata`);
+                    const counterDoc = await transaction.get(counterDocRef);
+
+                    let nextId;
+                    if (counterDoc.exists()) {
+                        nextId = counterDoc.data().lastId + 1;
+                    } else {
+                        nextId = 1;
+                        transaction.set(counterDocRef, { lastId: nextId });
+                    }
+                    
+                    const formData = {
+                        cotizacionId: nextId,
+                        cliente: document.getElementById('cliente').value,
+                        vendedor: document.getElementById('vendedor').value,
+                        cotizacionDolar: parseFloat(document.getElementById('cotizacionDolar').value) || 0,
+                        cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
+                        anchoEtiqueta: parseFloat(document.getElementById('anchoEtiqueta').value) || 0,
+                        avanceEtiqueta: parseFloat(document.getElementById('avanceEtiqueta').value) || 0,
+                        tipoImpresion: document.getElementById('tipoImpresion').value,
+                        sustrato: document.getElementById('sustrato').value,
+                        barniz: document.getElementById('barniz').value,
+                        laminado: document.getElementById('laminado').value,
+                        superficieStamping: parseFloat(document.getElementById('superficieStamping').value) || 0,
+                        costoPrimer: parseFloat(document.getElementById('costoPrimer').value) || 0,
+                        gastosPrePrensa: parseFloat(document.getElementById('gastosPrePrensa').value) || 0,
+                        cantidadCajas: parseFloat(document.getElementById('cantidadCajas').value) || 0,
+                        destinoEnvio: document.getElementById('destinoEnvio').value,
+                        porcentajeUtilidad: parseFloat(document.getElementById('porcentajeUtilidad').value) || 0,
+                        porcentajeComision: parseFloat(document.getElementById('porcentajeComision').value) || 0,
+                        porcentajeIIBB: parseFloat(document.getElementById('porcentajeIIBB').value) || 0,
+                    };
+
+                    const results = calculateQuote(formData);
+                    const quoteToSave = {
+                        ...formData,
+                        ...results,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    // Guardamos la cotización con el nuevo ID
+                    const quotesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/cotizaciones`);
+                    const newQuoteDocRef = await addDoc(quotesCollectionRef, quoteToSave);
+                    console.log("Document successfully written with ID: ", newQuoteDocRef.id);
+                    
+                    // Actualizamos el contador en una transacción
+                    transaction.update(counterDocRef, { lastId: nextId });
+
+                    // Opcional: actualiza el ID en la UI inmediatamente
+                    cotizacionIdDisplay.textContent = nextId;
+                    showSystemMessage(`Cotización #${nextId} guardada exitosamente.`, 'success');
+                });
+            } catch (error) {
+                console.error("Transaction failed: ", error);
+                showSystemMessage('Error al guardar la cotización. Intenta de nuevo.', 'error');
+            }
+        });
+
+        // --- Inicialización de Firebase ---
+        window.onload = async function() {
+            try {
+                // Initialize Firebase
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Sign in with custom token or anonymously if no token is available
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Listen for authentication state changes
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = userId;
+                        console.log("Firebase initialized for user:", userId);
+
+                        // Set up real-time listener for quotes
+                        const quotesCollection = collection(db, `artifacts/${appId}/users/${userId}/cotizaciones`);
+                        onSnapshot(quotesCollection, (snapshot) => {
+                            loadingQuotesMessage.classList.add('hidden');
+                            const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            renderSavedQuotes(quotes);
+                        }, (error) => {
+                            console.error("Error listening to collection:", error);
+                            loadingQuotesMessage.textContent = 'Error al cargar las cotizaciones.';
+                        });
+
+                    } else {
+                        userId = null;
+                        userIdDisplay.textContent = 'No autenticado';
+                        console.log("No user is signed in.");
+                        loadingQuotesMessage.textContent = 'Inicia sesión para ver tus cotizaciones.';
+                    }
+                });
+
+                // Trigger initial calculation
+                form.dispatchEvent(new Event('input'));
+                
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showSystemMessage('Error al iniciar la aplicación. Verifica la configuración.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
